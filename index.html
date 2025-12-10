@@ -2,22 +2,1631 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Forward Life Manager</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Forward Life Manager v1.5</title>
+  <style>
+    /* ========== Base Layout ========== */
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin: 0;
+  background: #ffffff;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ========== Header ========== */
+header {
+  background: #32cd32; /* lime green */
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+/* ========== Top Bar (date + cutoff + summary) ========== */
+#topbar {
+  padding: 10px;
+  border-bottom: 2px solid #32cd32;
+  background: #f0fff0; /* pale mint green */
+}
+#dateRow {
+  display: flex;
+  justify-content: space-between; /* date left, controls right */
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+#fileControls {
+  display: flex;
+  gap: 10px; /* space between export and import */
+}
+
+#exportLMLBtn,
+#lmlFile {
+  padding: 6px 12px;
+  border: 2px solid #32cd32;
+  border-radius: 4px;
+  font-weight: bold;
+  background: #ffffff;
+  color: #006400;
+  cursor: pointer;
+}
+
+#exportLMLBtn:hover,
+#lmlFile:hover {
+  background: #32cd32;
+  color: #ffffff;
+}
+
+
+#currentDate {
+  font-weight: bold;
+  color: #006400;
+  margin-bottom: 8px;
+}
+
+#cutoffControls {
+  margin-bottom: 8px;
+}
+
+#cutoffControls input,
+#cutoffControls button {
+  margin-left: 6px;
+  padding: 6px;
+  border: 2px solid #32cd32;
+  border-radius: 4px;
+}
+
+#cutoffControls button {
+  background: #ffffff;
+  color: #006400;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#cutoffControls button:hover {
+  background: #32cd32;
+  color: #ffffff;
+}
+
+/* Summary totals + eval box bar */
+#summaryBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid #ccc;
+  background: #f0fff0; /* consistent light green */
+}
+
+#summaryTotals div {
+  font-weight: bold;
+  color: #006400;
+}
+
+#evalBox input {
+  width: 280px;
+  padding: 4px 8px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+}
+
+/* ========== Update Form ========== */
+.update-form {
+  padding: 10px;
+  border-bottom: 2px solid #32cd32;
+  background: #ffffff;
+}
+
+.update-form input,
+.update-form select,
+.update-form button {
+  margin: 5px;
+  padding: 6px;
+  border: 2px solid #32cd32;
+  border-radius: 4px;
+}
+
+.update-form button {
+  background: #ffffff;
+  color: #006400;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.update-form button:hover {
+  background: #32cd32;
+  color: #ffffff;
+}
+
+/* ========== Sort Bar ========== */
+.sort-bar {
+  padding: 10px;
+  border-bottom: 2px solid #32cd32;
+  background: #f9fff9;
+  text-align: center;
+}
+
+.sort-bar select {
+  padding: 6px;
+  border: 2px solid #32cd32;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* ========== Main Container ========== */
+.main {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+}
+
+/* Ledger styling */
+.ledger {
+  width: 50%;
+  overflow-y: auto;
+  border-left: 2px solid #32cd32;
+  border-right: 2px solid #32cd32;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 60px 100px 1fr 120px 100px 80px;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.entry:nth-child(odd) { background: #ffffff; }
+.entry:nth-child(even) { background: #f5f5f5; }
+
+.id-tag { font-weight: bold; color: #006400; }
+.amount { font-weight: bold; }
+.amount.income { color: #006400; }
+.amount.expense { color: #cc0000; }
+.date { font-size: 0.9em; color: #555; }
+.recurring { font-size: 0.8em; color: #32cd32; font-weight: bold; }
+
+.entry button {
+  background: #ffffff;
+  border: 1px solid #32cd32;
+  border-radius: 4px;
+  color: #006400;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.entry button:hover {
+  background: #32cd32;
+  color: #ffffff;
+}
+
+/* ========== Edit Panel ========== */
+.edit-panel {
+  width: 250px;
+  border-left: 2px solid #32cd32;
+  padding: 15px;
+  background: #f9fff9;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-panel input,
+.edit-panel button {
+  margin: 8px 0;
+  padding: 6px;
+  border: 2px solid #32cd32;
+  border-radius: 4px;
+}
+
+.edit-panel button {
+  background: #ffffff;
+  color: #006400;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.edit-panel button:hover {
+  background: #32cd32;
+  color: #ffffff;
+}
+
+/* ========== Fieldsets ========== */
+fieldset {
+  border: 2px solid #32cd32;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  background: #ffffff;
+}
+
+legend {
+  font-weight: bold;
+  color: #006400;
+}
+
+.inline-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.inline-options fieldset {
+  flex: 1;
+}
+
+  </style>
 </head>
 <body>
-  <h1>Forward Life Manager</h1>
-  <p>Input your weekly hours, income, and goals below:</p>
+  <header>
+    <h1>Forward Life Manager</h1>
+  </header>
+<!-- Current Date Display -->
+<!-- Current Date + File Input -->
+<div id="dateRow">
+  <div id="currentDate">Today's date: 2025‑12‑10</div>
+  <div id="fileControls">
+    <button id="exportLMLBtn">Export LML</button>
+    <input type="file" id="lmlFile" accept=".lml,.json">
+  </div>
+</div>
+
+
+
+<div id="topbar">
+  <div id="summary">
+  <div id="cutoffControls">
+    <label for="futureCutoff">Future cutoff:</label>
+    <input type="date" id="futureCutoff">
+    <button type="button" id="cutoffTodayBtn">Use current date</button>
+  </div>
+
+</div>
+
+  <!-- Cutoff totals -->
+<!-- Cutoff totals bar -->
+<div id="summaryBar">
+  <div id="summaryTotals">
+    <div>Total Income: $0</div>
+    <div>Total Expenses: $0</div>
+    <div>Net: $0</div>
+  </div>
+
+  <div id="evalBox">
+    <input type="text" id="evalInput" 
+           placeholder="-200000,1500,mortgage,m,5,m,s,12*30">
+  </div>
+</div>
+
+
+</div>
+
+
+  <!-- Update form -->
+<div class="update-form">
+  <!-- Cash Flow -->
+  <fieldset>
+    <legend>Cash Flow</legend>
+<label>Principal</label>
+<input type="text" id="principal" placeholder="e.g. 200000">
+<label>Recurring Amount</label>
+<input type="text" id="amount" placeholder="e.g. -1500 (mortgage) or +500 (savings)">
+
+    <label>Purpose</label>
+    <input type="text" id="purpose" placeholder="Rent, Savings, Loan...">
+    <label>Start Date</label>
+    <input type="date" id="date">
+    <label>Payment Interval</label>
+    <select id="cashFreq">
+      <option value="once">One-off</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+      <option value="yearly">Yearly</option>
+      <option value="custom">Custom</option>
+    </select>
+    <input type="text" id="cashDays" placeholder="Custom interval (days)">
+  </fieldset>
+
+  <!-- Interest -->
+  <fieldset>
+    <legend>Interest / Growth</legend>
+    <label>Annual Rate (%)</label>
+    <input type="text" id="annualRate" placeholder="e.g. 5 or 5/12">
+    <label>Compounding Interval</label>
+    <select id="compoundFreq">
+      <option value="none">No compounding</option>
+      <option value="monthly">Monthly</option>
+      <option value="yearly">Yearly</option>
+      <option value="custom">Custom</option>
+    </select>
+    <input type="text" id="compoundDays" placeholder="Custom interval (days)">
+    <label><input type="checkbox" id="interestFirst"> Interest First</label>
+    <label><input type="checkbox" id="stopAtPayoff"> Stop at Payoff</label>
+    <label><input type="checkbox" id="cancelout"> Cancel out debt payoff</label>
+  </fieldset>
+
+  <!-- Term -->
+
+<!-- Inline container for Terms and Presets -->
+<div class="inline-options">
+  <!-- Terms on the left -->
+  <fieldset class="terms-side">
+    <legend>Term</legend>
+    <label>Number of periods</label>
+    <input type="text" id="term" placeholder="e.g. 12 or 5*12">
+  </fieldset>
+
+  <!-- Presets on the right -->
+  <fieldset class="presets-side">
+    <legend>Presets</legend>
+    <label for="presetSelect">Choose a preset:</label>
+    <select id="presetSelect" onchange="applyPreset()">
+      <option value="">-- Select --</option>
+      <option value="mortgage">Mortgage</option>
+      <option value="savings">Savings</option>
+      <option value="subscription">Subscription</option>
+      <option value="investment">Investment</option>
+      <option value="credit">Credit debt</option>
+    </select>
+  </fieldset>
+</div>
+
+  <button onclick="addEntry()">Add</button>
+</div>
+
+
+
+
+
+  <!-- Main container: Ledger + Edit Panel -->
+  <div class="sort-bar">
+  <label for="sortOption">Sort by:</label>
+  <select id="sortOption" onchange="renderLedger()">
+    <option value="dateDesc">Date ↓ (newest first)</option>
+    <option value="dateAsc">Date ↑ (oldest first)</option>
+    <option value="amountDesc">Amount ↓ (highest first)</option>
+    <option value="amountAsc">Amount ↑ (lowest first)</option>
+  </select>
+</div>
+
+  <div class="main">
+
+    <!-- Ledger -->
+    <div class="ledger" id="ledger"></div>
+
+    <!-- Edit Panel -->
+    <!-- Edit Panel -->
+<div class="edit-panel">
+  <h3 id="editTitle">Edit Transaction</h3>
+
+  <!-- Common fields -->
+  <input type="number" id="modifyId" placeholder="Transaction #">
+  <input type="number" id="editAmount" placeholder="New Amount (optional)">
+  <input type="text" id="editPurpose" placeholder="New Purpose (optional)">
+  <input type="date" id="editDate">
+
+  <!-- Action buttons (swap dynamically) -->
+  <div id="editActions">
+    <button onclick="editEntryById()">Apply Edit</button>
+    <button onclick="removeEntryById()">Remove</button>
+  </div>
+</div>
+
+
+  </div>
+
+<script>
+let totalIncome = 0;
+let totalExpenses = 0;
+let entries = [];
+let nextEntryId = 1;
+let nextSubscriptionId = 1;
+showCurrentDate();
+let displayMap = {}; // global
+
+document.getElementById("evalInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    const str = e.target.value.trim();
+    if (!str) return;
+    const entry = addEvalEntry(str); // your parser logic
+    if (entry) {
+      entries.push(entry);
+      updateSummary();
+      renderLedger();
+      e.target.value = ""; // clear after adding
+    }
+  }
+});
+function updateSummary() {
+  const cutoffDate = getCutoffDate();
+  const expanded = entries.flatMap(expandRule);
+
+  const visible = cutoffDate
+    ? expanded.filter(e => new Date(e.date) <= cutoffDate)
+    : expanded;
+
+  // Inflows: positive amounts that are NOT cancelout
+  const cutoffInflows = roundToCents(
+    visible.filter(e => e.amount > 0 && !e.cancelout)
+           .reduce((sum, e) => sum + e.amount, 0)
+  );
+
+  // Outflows: all negatives (including principal, expenses, repayments)
+  const cutoffOutflows = roundToCents(
+    visible.filter(e => e.amount < 0)
+           .reduce((sum, e) => sum + e.amount, 0) // negative sum
+  );
+
+  // Transfers: positive amounts flagged as cancelout (repayments)
+  const cutoffTransfers = roundToCents(
+    visible.filter(e => e.amount > 0 && e.cancelout)
+           .reduce((sum, e) => sum + e.amount, 0)
+  );
+
+  const fullInflows = roundToCents(
+    expanded.filter(e => e.amount > 0 && !e.cancelout)
+            .reduce((sum, e) => sum + e.amount, 0)
+  );
+
+  const fullOutflows = roundToCents(
+    expanded.filter(e => e.amount < 0)
+            .reduce((sum, e) => sum + e.amount, 0)
+  );
+
+  const fullTransfers = roundToCents(
+    expanded.filter(e => e.amount > 0 && e.cancelout)
+            .reduce((sum, e) => sum + e.amount, 0)
+  );
+
+  const cutoffTotalsEl = document.getElementById("summaryTotals");
+  const fullTotalsEl = document.getElementById("summaryTotalsFull");
+
+  if (cutoffTotalsEl) {
+    cutoffTotalsEl.innerHTML = `
+      <div><strong>Cutoff + inflows:</strong> $${cutoffInflows}</div>
+      <div><strong>Cutoff – outflows:</strong> $${Math.abs(cutoffOutflows)}</div>
+      <div><strong>Cutoff transfers:</strong> $${cutoffTransfers}</div>
+      <div><strong>Cutoff net:</strong> $${roundToCents(cutoffInflows + cutoffOutflows)}</div>
+    `;
+  }
+
+  if (fullTotalsEl) {
+    fullTotalsEl.innerHTML = `
+      <div><strong>Full + inflows:</strong> $${fullInflows}</div>
+      <div><strong>Full – outflows:</strong> $${Math.abs(fullOutflows)}</div>
+      <div><strong>Full transfers:</strong> $${fullTransfers}</div>
+      <div><strong>Full net:</strong> $${roundToCents(fullInflows + fullOutflows)}</div>
+    `;
+  }
+}
+
+
+
+function setCutoffToToday() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const cutoffEl = document.getElementById("futureCutoff");
+  if (cutoffEl) {
+    cutoffEl.value = `${yyyy}-${mm}-${dd}`;
+    updateSummary();
+    renderLedger();
+  }
+}
+
+function getCutoffDate() {
+  const cutoffEl = document.getElementById("futureCutoff");
+  const cutoffInput = cutoffEl ? cutoffEl.value : null;
+  return cutoffInput ? new Date(cutoffInput) : null;
+}
+
+
+function renderLedger() {
+  const cutoffDate = getCutoffDate();
+
+  const ledger = document.getElementById("ledger");
+  if (!ledger) return;
+
+  ledger.innerHTML = "";
+  displayMap = {};
+
+  // Expand all, then filter by cutoff for display only
+  let expanded = entries.flatMap(expandRule);
+
+  const visible = cutoffDate
+    ? expanded.filter(e => new Date(e.date) <= cutoffDate)
+    : expanded;
+
+  // Stable ascending index assigned on the visible list
+  visible.sort((a, b) => new Date(a.date) - new Date(b.date));
+  visible.forEach((entry, index) => {
+    entry.displayId = index + 1;
+    displayMap[entry.displayId] = entry.subscriptionId || entry.entryId;
+  });
+
+  // Render descending (latest on top)
+  visible.sort((a, b) => new Date(b.date) - new Date(a.date));
+  visible.forEach(e => {
+    const div = document.createElement("div");
+    div.className = "entry";
+    div.innerHTML = `
+      <div class="id-tag">#${e.displayId}</div>
+      <div class="amount ${e.type}">${e.type === "income" ? "+ $" : "- $"}${e.amount}</div>
+      <div class="details-purpose">${e.purpose ?? ""}</div>
+      <div class="date">${e.date}</div>
+      <div class="recurring">${e.recurring ?? ""}</div>
+      <button onclick="editEntry(${e.displayId})">Edit</button>
+    `;
+    ledger.appendChild(div);
+  });
+
+  // Placeholders up to 10 rows
+  if (visible.length < 10) {
+    for (let i = visible.length; i < 10; i++) {
+      const div = document.createElement("div");
+      div.className = "entry";
+      div.innerHTML = `
+        <div class="id-tag"></div>
+        <div class="amount"></div>
+        <div class="details-purpose"></div>
+        <div class="date"></div>
+        <div class="recurring"></div>
+        <div></div>
+      `;
+      ledger.appendChild(div);
+    }
+  }
+}
+
+function getToday() {
+  const d = new Date();
+  return d.toISOString().split("T")[0]; // YYYY-MM-DD
+}
+
+function showCurrentDate() {
+  document.getElementById("currentDate").innerText = "Today: " + getToday();
+}
+
+function expandRecurring(entry) {
+  // --- Autofill defaults if not specified ---
+  entry.baseAmount   = entry.baseAmount   ?? entry.amount   ?? 0;
+  entry.purpose      = entry.purpose      ?? "Unspecified";
+  entry.startDate    = entry.startDate    ?? getToday();
+  entry.recurring    = entry.recurring    ?? "Monthly";
+  entry.customDays   = entry.customDays   ?? null;
+  entry.overrides    = entry.overrides    ?? {};
+
+  // Calculator fields (defaults)
+  entry.initial      = entry.initial      ?? entry.baseAmount;
+  entry.annualRate   = entry.annualRate   ?? 0;
+  entry.direction    = entry.direction    ?? (entry.type === "income" ? "savings" : "debt");
+  entry.term         = entry.term         ?? 1;
+  entry.compoundFreq = entry.compoundFreq ?? null;
+  entry.compoundDays = entry.compoundDays ?? null;
+  entry.cashFreq     = entry.cashFreq     ?? entry.recurring.toLowerCase();
+  entry.cashDays     = entry.cashDays     ?? null;
+  entry.cashAmount   = entry.cashAmount   ?? entry.baseAmount;
+  entry.interestFirst= entry.interestFirst?? false;
+  entry.stopAtPayoff = entry.stopAtPayoff ?? false;
+
+  // --- One-off case ---
+  if (entry.term === 1 && !entry.compoundFreq) {
+    return [{
+      entryId: entry.entryId,
+      subscriptionId: entry.subscriptionId,
+      type: entry.type,
+      amount: entry.baseAmount,
+      purpose: entry.purpose,
+      date: entry.startDate,
+      recurring: "One-off"
+    }];
+  }
+
+  // --- Subscription (0% interest) ---
+  if (entry.annualRate === 0 && entry.recurring) {
+    let generated = [];
+    let start = new Date(entry.startDate);
+    let today = new Date(getToday());
+
+    while (start <= today) {
+      const dateStr = start.toISOString().split("T")[0];
+      const amt = entry.overrides[dateStr] ?? entry.baseAmount;
+
+      generated.push({
+        subscriptionId: entry.subscriptionId,
+        type: entry.type,
+        amount: amt,
+        purpose: entry.purpose,
+        date: dateStr,
+        recurring: entry.recurring
+      });
+
+      if (entry.recurring === "Weekly") start.setDate(start.getDate() + 7);
+      else if (entry.recurring === "Monthly") start.setMonth(start.getMonth() + 1);
+      else if (entry.recurring === "Yearly") start.setFullYear(start.getFullYear() + 1);
+      else if (entry.recurring === "Custom" && entry.customDays) start.setDate(start.getDate() + entry.customDays);
+      else break;
+    }
+    return generated;
+  }
+
+  // --- Debt/Savings (calculator) ---
+  if (entry.annualRate > 0) {
+    const result = simulate(entry);
+    return result.entries.map(e => ({
+      entryId: entry.entryId,
+      subscriptionId: entry.subscriptionId,
+      type: entry.direction === "debt" ? "expense" : "income",
+      amount: e.cash,
+      purpose: entry.purpose,
+      date: fmtDate(e.date),
+      recurring: entry.cashFreq
+    }));
+  }
+
+  return [];
+}
+
+function fmt(n){ return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtDate(d) {
+  const dateObj = (d instanceof Date) ? d : new Date(d);
+  if (isNaN(dateObj)) return ""; // guard against invalid
+  return dateObj.toISOString().slice(0, 10);
+}
+
+
+
+function daysFor(freq, customDays) {
+  switch (freq) {
+    case "once": return Infinity;
+    case "weekly": return 7;
+    case "monthly": return 30;
+    case "yearly": return 365;
+    case "custom": return customDays || 30;
+    default: return 30; // fallback
+  }
+}
+
+
+function addDays(date, days){
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+}
+
+function roundToCents(n) {
+    return Math.round(n * 100) / 100;
+}
+
+function applyPreset() {
+  const preset = document.getElementById('presetSelect').value;
+  switch (preset) {
+    case 'mortgage':
+      document.getElementById('purpose').value = 'Mortgage';
+      document.getElementById('principal').value = '-300000';   // debt principal
+      document.getElementById('amount').value = '2500';         // monthly payment
+      document.getElementById('annualRate').value = '5';        // annual %
+      document.getElementById('cashFreq').value = 'monthly';    // payments monthly
+      document.getElementById('compoundFreq').value = 'monthly';// interest compounded monthly
+      document.getElementById('term').value = '30*12';          // 30 years
+      document.getElementById('interestFirst').checked = false;
+      document.getElementById('stopAtPayoff').checked = true;
+      break;
+
+    case 'savings':
+      document.getElementById('purpose').value = 'Savings';
+      document.getElementById('principal').value = '5000';
+      document.getElementById('amount').value = '200';
+      document.getElementById('annualRate').value = '3';
+      document.getElementById('cashFreq').value = 'monthly';    
+      document.getElementById('compoundFreq').value = 'yearly'; // interest compounded yearly
+      document.getElementById('term').value = '10*12';          // 10 years
+      document.getElementById('interestFirst').checked = false;
+      document.getElementById('stopAtPayoff').checked = false;
+      break;
+
+    case 'subscription':
+      document.getElementById('purpose').value = 'Streaming Service';
+      document.getElementById('principal').value = '0';
+      document.getElementById('amount').value = '-15';
+      document.getElementById('annualRate').value = '0';
+      document.getElementById('cashFreq').value = 'monthly';
+      document.getElementById('compoundFreq').value = 'none';   // no compounding
+      document.getElementById('term').value = '12';             // 1 year
+      document.getElementById('interestFirst').checked = false;
+      document.getElementById('stopAtPayoff').checked = false;
+      break;
+case 'credit':
+  document.getElementById('purpose').value = 'Credit Card';
+  document.getElementById('principal').value = '-5000';        // example starting balance
+  document.getElementById('amount').value = '200';             // monthly payment
+  document.getElementById('annualRate').value = '18';          // APR in percent
+  document.getElementById('cashFreq').value = 'monthly';       // payments monthly
+  document.getElementById('compoundFreq').value = 'custom';    // daily compounding
+  document.getElementById('compoundDays').value = '1';         // 1 day step
+  document.getElementById('term').value = '24';                // 2 years (24 months)
+  document.getElementById('interestFirst').checked = true;     // accrue interest before payment
+  document.getElementById('stopAtPayoff').checked = true;      // stop when balance cleared
+  break;
+
+  }
+}
+
+function safeEvalNum(expr, fallback = 0) {
+  if (!expr) return fallback;
+  try {
+    const v = eval(String(expr));
+    return Number.isFinite(v) ? v : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+
+function parseEvalString(str) {
+  const tokens = str.split(",").map(t => t.trim());
+  const entry = {};
+
+  entry.initial      = tokens[0] ? safeEvalNum(tokens[0].replace(/k$/i,"000")) : undefined;
+  entry.cashAmount   = tokens[1] ? safeEvalNum(tokens[1]) : undefined;
+  entry.purpose      = tokens[2] || undefined;
+  entry.cashFreq     = tokens[3] ? (tokens[3]==="m"?"monthly":tokens[3]==="q"?"quarterly":tokens[3]==="y"?"yearly":"once") : undefined;
+  entry.annualRate   = tokens[4] ? safeEvalNum(tokens[4]) : undefined;
+  entry.compoundFreq = tokens[5] ? (tokens[5]==="m"?"monthly":tokens[5]==="q"?"quarterly":tokens[5]==="y"?"yearly":"none") : undefined;
+  entry.stopAtPayoff = tokens[6] ? (tokens[6]==="s") : undefined;
+  entry.term         = tokens[7] ? safeEvalNum(tokens[7]) : undefined;
+  entry.date         = tokens[8] || undefined;
+
+  return entry;
+}
+
+
+function addEvalEntry(str) {
+  const parsed = parseEvalString(str);
+
+  const principal     = parsed.initial || 0;
+  const amount        = parsed.cashAmount || 0;
+  const purpose       = parsed.purpose;
+  const date          = parsed.date || getToday();
+
+  const annualRate    = parsed.annualRate || 0;
+  const term          = parsed.term || 0;
+  const cashFreq      = parsed.cashFreq || "once";
+  const cashDays      = parsed.cashDays ?? null;
+  const compoundFreq  = parsed.compoundFreq || "none";
+  const compoundDays  = parsed.compoundDays ?? null;
+  const interestFirst = parsed.interestFirst || false;
+  const stopAtPayoff  = parsed.stopAtPayoff || false;
+
+  // Guard: require either principal or amount, and a purpose
+  if ((!principal && !amount) || !purpose) return;
+
+  // Direction
+  const direction = (principal < 0 || amount < 0) ? "debt" : "savings";
+
+  // Recurrence detection
+  const isRecurrence = cashFreq !== "once" && amount !== 0;
+
+const cancelout = parsed.cancelout || false;
+
+  const entry = {
+    entryId: nextEntryId++,
+    subscriptionId: isRecurrence ? nextSubscriptionId++ : null,
+    purpose,
+    startDate: date,
+    term,
+    annualRate,
+    cashFreq,
+    cashDays,
+    compoundFreq,
+    compoundDays,
+    interestFirst,
+    stopAtPayoff,
+
+    initial: principal,
+    cashAmount: amount,
+
+    direction,
+    cancelout,            // <-- use local var
+    overrides: {}
+  };
+
+  entries.push(entry);
+  updateSummary();
+  renderLedger();
+}
+
+
+
+
+
+
+function simulate(params) {
+  const {
+    initial = 0,            // principal (signed: negative for debt, positive for savings)
+    cashAmount = 0,         // recurring (signed: positive for payments/deposits, negative for expenses)
+    annualRate = 0,
+    start,
+    term = 0,
+    compoundFreq,
+    compoundDays,
+    cashFreq,
+    cashDays,
+    interestFirst = false,
+    stopAtPayoff = (initial < 0) // default: stop if debt
+  } = params;
+
+  const cashStepDays = daysFor(cashFreq, cashDays);
+  const compoundStepDays =
+    (compoundFreq && compoundFreq !== "none")
+      ? daysFor(compoundFreq, compoundDays)
+      : cashStepDays;
+
+  const compPerYear = 365 / compoundStepDays;
+  const r = annualRate / compPerYear;
+
+  let balance = initial;
+  let compDate = new Date(start);
+  let cashDate = new Date(start);
+
+  let periodsDone = 0;
+  const entries = [];
+  let totalInterest = 0;
+  let totalCash = 0;
+
+  // --- Helpers ---
+  function recordPrincipal() {
+    if (initial !== 0) {
+      entries.push({
+        date: new Date(start),
+        event: "Principal",
+        interest: 0,
+        cash: initial,
+        balance
+      });
+    }
+  }
+
+  function accrueInterest(date) {
+    const interest = roundToCents(balance * r/100);
+    balance = roundToCents(balance + interest);
+    totalInterest += interest;
+    entries.push({
+      date: new Date(date),
+      event: "Interest",
+      interest,
+      cash: (initial < 0 ? -Math.abs(interest) : +Math.abs(interest)), // show as expense/income
+      balance
+    });
+  }
+
+  function applyCash(date) {
+  const dateStr = fmtDate(date);
+
+  // Default recurring cash
+  let appliedCash = cashAmount;
+
+  // Override amount if present
+  if (params.overrides && params.overrides[dateStr] !== undefined) {
+    appliedCash = params.overrides[dateStr];
+  }
+
+  // Trim final payment if overshooting debt payoff
+  if (initial < 0 && stopAtPayoff && balance + appliedCash > 0) {
+    appliedCash = -balance;
+    balance = 0;
+    totalCash += appliedCash;
+    entries.push({
+      date: new Date(date),
+      event: "Final Payment",
+      interest: 0,
+      cash: appliedCash,
+      balance,
+      purpose: params.purposeOverrides?.[dateStr] || purpose
+    });
+    return true;
+  }
+
+  balance += appliedCash;
+  totalCash += appliedCash;
+  entries.push({
+    date: new Date(date),
+    event: appliedCash > 0 ? "Payment/Deposit" : "Expense",
+    interest: 0,
+    cash: appliedCash,
+    balance,
+    purpose: params.purposeOverrides?.[dateStr] || purpose
+  });
+  return false;
+}
+
+
+  // --- Simulation ---
+  recordPrincipal();
+
+  while (periodsDone < term) {
+    if (initial < 0 && stopAtPayoff && balance >= 0) break;
+
+    if (compDate < cashDate) {
+      accrueInterest(compDate);
+      compDate = addDays(compDate, compoundStepDays);
+
+    } else if (cashDate < compDate) {
+      if (applyCash(cashDate)) break;
+      cashDate = addDays(cashDate, cashStepDays);
+      periodsDone++;
+
+    } else {
+      // Same day: respect toggle
+      if (interestFirst) accrueInterest(compDate);
+      if (applyCash(cashDate)) break;
+      if (!interestFirst) accrueInterest(compDate);
+
+      compDate = addDays(compDate, compoundStepDays);
+      cashDate = addDays(cashDate, cashStepDays);
+      periodsDone++;
+    }
+  }
+
+  return {
+    entries: entries.sort((a, b) => a.date - b.date),
+    totals: { totalInterest, totalCash, finalBalance: balance }
+  };
+}
+
+
+
+
+
+
+function expandRule(entry) {
+  const events = [];
+
+  const isRecurrence = !!entry.subscriptionId; // explicit flag for recurrence
+  const sourceEntryId = entry.entryId;
+
+  // Ledger: principal (seed/one-off)
+if (entry.initial && entry.initial !== 0) {
+  events.push({
+    entryId: sourceEntryId,
+    subscriptionId: isRecurrence ? entry.subscriptionId : null,
+    isRecurrence,
+    occurrenceType: "principal",
+    type: entry.initial < 0 ? "expense" : "income",
+    amount: entry.initial, // keep sign
+    purpose: `${entry.purpose} (principal)`,
+    date: fmtDate(entry.startDate),
+    recurring: "One-off",
+    interest: 0,
+    balance: entry.initial,
+    cancelout: entry.cancelout || false
+  });
+}
+
+  // Simulation params
+const params = {
+  initial: entry.initial,
+  cashAmount: entry.cashAmount,
+  annualRate: entry.annualRate,
+  direction: entry.direction,
+  start: entry.startDate,
+  term: entry.term,
+  compoundFreq: entry.compoundFreq,
+  compoundDays: entry.compoundDays,
+  cashFreq: entry.cashFreq,
+  cashDays: entry.cashDays,
+  interestFirst: entry.interestFirst,
+  stopAtPayoff: entry.stopAtPayoff,
+  overrides: entry.overrides,
+  purposeOverrides: entry.purposeOverrides,
+  purpose: entry.purpose
+};
+
+
+  const result = simulate(params);
+
+  // Append simulated events with preserved links
+
+result.entries.forEach(e => {
+  const isInterest = e.event === "Interest";
+  const isPrincipal = e.event === "Principal";
+  if (isPrincipal) return;
+
+  const amount = isInterest ? e.interest : e.cash; // keep sign
+  if (amount === 0) return;
+
+  const cashType = amount < 0 ? "expense" : "income";
+  const recurringLabel = entry.cashFreq || "One-off";
+
+  events.push({
+    entryId: sourceEntryId,
+    subscriptionId: isRecurrence ? entry.subscriptionId : null,
+    isRecurrence,
+    occurrenceType: isInterest ? "interest" : "cash",
+    type: cashType,
+    amount,
+    purpose: entry.purpose,
+    date: fmtDate(e.date),
+    recurring: isInterest ? (entry.compoundFreq || recurringLabel) : recurringLabel,
+    interest: e.interest,
+    balance: e.balance,
+    cancelout: entry.cancelout || false
+  });
+});
+
+
+
+  return events;
+}
+
+
+
+
+
+function removeByDisplayId(displayId) {
+  let expanded = [];
+  entries.forEach(e => expanded = expanded.concat(expandRule(e)));
+  expanded.sort((a, b) => new Date(a.date) - new Date(b.date));
+  expanded.forEach((entry, idx) => entry.displayId = idx + 1);
+
+  const occurrence = expanded.find(e => e.displayId === displayId);
+  if (!occurrence) return;
+
+  if (occurrence.subscriptionId) {
+  const target = entries.find(e => e.subscriptionId === occurrence.subscriptionId);
+  if (!target) return; // nothing to remove
+
+  entries = entries.filter(e => e.subscriptionId !== target.subscriptionId);
+}
+
+
+  updateSummary();
+  renderLedger();
+  resetEditForm();
+}
+
+
+function checkEditContext() {
+  const displayId = parseInt(document.getElementById("modifyId").value);
+  const titleEl = document.getElementById("editTitle");
+  const actionsEl = document.getElementById("editActions");
+
+  if (!displayId) {
+    titleEl.innerText = "";
+    actionsEl.innerHTML = "";
+    return;
+  }
+
+  // Expand and assign display IDs
+  let expanded = [];
+  entries.forEach(e => expanded = expanded.concat(expandRule(e)));
+  expanded.sort((a, b) => new Date(a.date) - new Date(b.date));
+  expanded.forEach((entry, index) => entry.displayId = index + 1);
+
+  const occurrence = expanded.find(e => e.displayId === displayId);
+  if (!occurrence) {
+    titleEl.innerText = "";
+    actionsEl.innerHTML = "";
+    return;
+  }
+
+  const isRecurrence = !!occurrence.subscriptionId;
+
+  if (isRecurrence) {
+    titleEl.innerText = `Edit Recurrence #${occurrence.subscriptionId}`;
+    actionsEl.innerHTML = `
+      <div class="edit-panel">
+        <button onclick="submitInconsistency(${occurrence.subscriptionId}, '${occurrence.date}')">Submit Inconsistency</button>
+        <button onclick="removeByDisplayId(${displayId})">Remove Recurrence</button>
+
+        <div class="advanced-panel">
+          <h4>Advanced Options</h4>
+<div class="field-group">
+  <label>Principal:
+    <input type="number" id="editPrincipal" placeholder="e.g. -300000">
+  </label>
+  <label>Recurring Amount:
+    <input type="number" id="editCashAmount" placeholder="e.g. 2500">
+  </label>
+</div>
+
+
+          <div class="field-group">
+            <label>Purpose:
+              <input type="text" id="editPurpose" placeholder="Mortgage, Savings, etc.">
+            </label>
+            <label>Start Date:
+              <input type="date" id="editDate">
+            </label>
+            <label>Term Count:
+              <input type="number" id="editTerm" placeholder="e.g. 360">
+            </label>
+          </div>
+
+          <div class="field-group">
+            <label>Annual Rate (%):
+              <input type="number" step="0.01" id="editRate" placeholder="e.g. 5.00">
+<label>Compounding Frequency:
+  <select id="editCompoundFreq">
+    <option value="">-- Select --</option>
+    <option value="none">None</option>
+    <option value="daily">Daily</option>
+    <option value="monthly">Monthly</option>
+    <option value="quarterly">Quarterly</option>
+    <option value="yearly">Yearly</option>
+    <option value="custom">Custom</option>
+  </select>
+</label>
+<label>Compounding Days:
+  <input type="number" id="editCompoundDays" placeholder="e.g. 30">
+</label>
+
+<label>Cash Frequency:
+  <select id="editCashFreq">
+    <option value="">-- Select --</option>
+    <option value="once">Once</option>
+    <option value="weekly">Weekly</option>
+    <option value="biweekly">Biweekly</option>
+    <option value="monthly">Monthly</option>
+    <option value="quarterly">Quarterly</option>
+    <option value="yearly">Yearly</option>
+    <option value="custom">Custom</option>
+  </select>
+</label>
+<label>Cash Days:
+  <input type="number" id="editCashDays" placeholder="e.g. 30">
+</label>
+
+          </div>
+
+          <div class="field-group">
+            <label><input type="checkbox" id="editInterestFirst"> Interest First</label>
+            <label><input type="checkbox" id="editStopAtPayoff"> Stop at Payoff</label>
+          </div>
+        </div>
+
+        <button class="primary-btn" onclick="editSubscription(${occurrence.subscriptionId})">Modify Recurrence</button>
+      </div>
+    `;
+  } else {
+    titleEl.innerText = `Edit Transaction #${occurrence.entryId}`;
+    actionsEl.innerHTML = `
+      <div class="edit-panel">
+        <button onclick="applyEdit(${displayId})">Apply Edit</button>
+        <button onclick="removeByDisplayId(${displayId})">Remove</button>
+      </div>
+    `;
+  }
+}
+
+
+
+
+
+
+function applyEdit(displayId) {
+  const newAmount = parseFloat(document.getElementById("editCashAmount")?.value);
+  const newPurpose = document.getElementById("editPurpose")?.value;
+  const newDate = document.getElementById("editDate")?.value;
+
+  editEntryById(displayId, newAmount, newPurpose, newDate);
+  resetEditForm();
+}
+
+
+
+
+function editEntryById(displayId, newAmount, newPurpose, newDate) {
+  let expanded = [];
+  entries.forEach(e => expanded = expanded.concat(expandRule(e)));
+  expanded.sort((a, b) => new Date(a.date) - new Date(b.date));
+  expanded.forEach((entry, idx) => entry.displayId = idx + 1);
+
+  const occurrence = expanded.find(e => e.displayId === displayId);
+  if (!occurrence) return;
+
+  if (occurrence.subscriptionId) {
+    const sub = entries.find(e => e.subscriptionId === occurrence.subscriptionId);
+    if (!sub) return;
+
+    if (!isNaN(newAmount) && !newDate) sub.cashAmount = newAmount;
+if (!isNaN(newAmount) && newDate) {
+  if (!sub.overrides) sub.overrides = {};
+  sub.overrides[newDate] = newAmount;
+}
+
+    if (newPurpose) {
+      if (!sub.purposeOverrides) sub.purposeOverrides = {};
+      sub.purposeOverrides[newDate || sub.startDate] = newPurpose;
+    }
+    if (newDate && !newAmount && !newPurpose) sub.startDate = new Date(newDate);
+
+  } else {
+    const entry = entries.find(e => e.entryId === occurrence.entryId);
+    if (!entry) return;
+
+    if (!isNaN(newAmount)) entry.amount = newAmount;
+    if (newPurpose) entry.purpose = newPurpose;
+    if (newDate) entry.date = new Date(newDate);
+  }
+
+  updateSummary();
+  renderLedger();
+}
+
+function editSubscription(subscriptionId) {
+  const sub = entries.find(e => e.subscriptionId === subscriptionId);
+  if (!sub) return;
+
+  // Basic fields
+  const newPrincipal = document.getElementById("editPrincipal")?.value;
+  const newCashAmount= document.getElementById("editCashAmount")?.value; // recurring flows
+  const newPurpose   = document.getElementById("editPurpose")?.value;
+  const newDate      = document.getElementById("editDate")?.value;
+
+  if (newPrincipal) sub.initial = parseFloat(newPrincipal);
+  if (newCashAmount) sub.cashAmount = parseFloat(newCashAmount);
+  if (newPurpose) sub.purpose = newPurpose;
+  if (newDate) sub.startDate = new Date(newDate);
+
+  // Advanced fields
+  const newTerm     = document.getElementById("editTerm")?.value;
+  const newRate     = document.getElementById("editRate")?.value;
+const newCompFreq = document.getElementById("editCompoundFreq")?.value;
+if (newCompFreq) sub.compoundFreq = newCompFreq;
+
+const newCashFreq = document.getElementById("editCashFreq")?.value;
+if (newCashFreq) sub.cashFreq = newCashFreq;
+
+  const newCompDays = document.getElementById("editCompoundDays")?.value;
+
+  const newCashDays = document.getElementById("editCashDays")?.value;
+  const interestFirstEl = document.getElementById("editInterestFirst");
+  const stopAtPayoffEl  = document.getElementById("editStopAtPayoff");
   
-  <form>
-    <label>Weekly Hours: <input type="number" id="hours"></label><br>
-    <label>Weekly Income: <input type="number" id="income"></label><br>
-    <label>Goal ($): <input type="number" id="goal"></label><br>
-    <button type="button" onclick="calculate()">Calculate Timeline</button>
-  </form>
 
-  <p id="output"></p>
+  if (newTerm) sub.term = parseInt(newTerm);
+  if (newRate) sub.annualRate = parseFloat(newRate);
+  if (newCompFreq && newCompFreq !== "none") sub.compoundFreq = newCompFreq;
+  if (newCompDays) sub.compoundDays = parseInt(newCompDays);
+  if (newCashFreq) sub.cashFreq = newCashFreq;
+  if (newCashDays) sub.cashDays = parseInt(newCashDays);
 
-  <script src="script.js"></script>
+  if (interestFirstEl) sub.interestFirst = interestFirstEl.checked;
+  if (stopAtPayoffEl) sub.stopAtPayoff = stopAtPayoffEl.checked;
+
+  // Direction parity with addEntry
+  sub.direction = (sub.initial < 0 || sub.cashAmount < 0) ? "debt" : "savings";
+
+  updateSummary();
+  renderLedger();
+  resetEditForm();
+}
+
+
+
+
+
+function submitInconsistency(subscriptionId, date) {
+  const sub = entries.find(e => e.subscriptionId === subscriptionId);
+  if (!sub) return;
+
+  // Grab the form values
+  const newAmount = document.getElementById("editAmount").value;
+  const newPurpose = document.getElementById("editPurpose").value;
+
+  // If user entered an amount, record it as an override for this date
+  if (newAmount) {
+    if (!sub.overrides) sub.overrides = {};
+    sub.overrides[date] = parseFloat(newAmount);
+  }
+
+  // If user entered a purpose, record it as a one‑time override
+  if (newPurpose) {
+    if (!sub.purposeOverrides) sub.purposeOverrides = {};
+    sub.purposeOverrides[date] = newPurpose;
+  }
+
+  // Re-render everything
+  updateSummary();
+  renderLedger();
+
+  // Reset form
+  document.getElementById("modifyId").value = "";
+  document.getElementById("editAmount").value = "";
+  document.getElementById("editPurpose").value = "";
+  document.getElementById("editDate").value = "";
+  checkEditContext(); 
+}
+
+function removeSubscription(subscriptionId) {
+  entries = entries.filter(e => e.subscriptionId !== subscriptionId);
+  updateSummary();
+  renderLedger();
+}
+
+function submitInconsistencyFromBox() {
+  const raw = document.getElementById("modifyId").value;
+  const id = parseInt(raw);
+  if (!id) return;
+
+  // Expand entries and assign display IDs
+  let expanded = [];
+  entries.forEach(e => expanded = expanded.concat(expandRule(e)));
+  expanded.sort((a, b) => new Date(a.date) - new Date(b.date));
+  expanded.forEach((entry, index) => entry.displayId = index + 1);
+
+  // Find occurrence by displayId or stable ID
+  let occurrence = expanded.find(e => e.displayId === id) ||
+                   expanded.find(e => e.subscriptionId === id);
+
+  if (!occurrence || !occurrence.subscriptionId) return;
+
+  // Call your existing inconsistency handler
+  submitInconsistency(occurrence.subscriptionId, occurrence.date);
+}
+
+
+function removeEntryById() {
+  const id = parseInt(document.getElementById("modifyId").value);
+
+  let expanded = [];
+  entries.forEach(e => expanded = expanded.concat(expandRule(e)));
+  const entry = expanded.find(e => e.id === id);
+  if (!entry) return;
+
+  if (entry.subscriptionId) {
+    // Remove entire subscription
+    entries = entries.filter(e => e.subscriptionId !== entry.subscriptionId);
+  } else {
+    // One-off removal
+    if (entry.type === "income") totalIncome -= entry.amount;
+    else totalExpenses -= entry.amount;
+    entries = entries.filter(e => e.id !== id);
+  }
+
+  updateSummary();
+  renderLedger();
+
+  // Reset form
+  document.getElementById("modifyId").value = "";
+  document.getElementById("editAmount").value = "";
+  document.getElementById("editPurpose").value = "";
+  document.getElementById("editDate").value = "";
+  checkEditContext(); 
+}
+
+
+
+// Edit button next to entry
+function editEntry(id) {
+  document.getElementById("modifyId").value = id;
+  checkEditContext();
+}
+
+
+function addEntry() {
+  const rawPrincipal = document.getElementById("principal")?.value;
+  const rawAmount    = document.getElementById("amount")?.value;
+  let nextSubscriptionId = 1;
+
+  let principal = 0;
+  if (rawPrincipal) {
+    try { principal = eval(rawPrincipal); } catch { principal = 0; }
+  }
+
+  let amount = 0;
+  if (rawAmount) {
+    try { amount = eval(rawAmount); } catch { amount = 0; }
+  }
+  
+  const purpose = document.getElementById("purpose").value;
+  const date    = document.getElementById("date").value || getToday();
+
+  const annualRate   = eval(document.getElementById("annualRate")?.value || "0");
+  const term         = eval(document.getElementById("term")?.value || "0");
+  const cashFreq     = document.getElementById("cashFreq")?.value || "once";
+  const cashDays     = eval(document.getElementById("cashDays")?.value || "null");
+  const compoundFreq = document.getElementById("compoundFreq")?.value || "none";
+  const compoundDays = eval(document.getElementById("compoundDays")?.value || "null");
+  const interestFirst= document.getElementById("interestFirst")?.checked || false;
+  const stopAtPayoff = document.getElementById("stopAtPayoff")?.checked || false;
+
+  if ((!principal && !amount) || !purpose) return;
+
+  // Direction: debt if principal < 0 or recurring < 0, savings otherwise
+  let direction;
+  if (principal < 0 || amount < 0) {
+    direction = "debt";
+  } else {
+    direction = "savings";
+  }
+
+// Decide if this is a recurrence
+const isRecurrence = cashFreq !== "once" && amount !== 0;
+
+const cancelout = document.getElementById("cancelout")?.checked || false;
+
+  const entry = {
+    entryId: nextEntryId++,
+    subscriptionId: isRecurrence ? nextSubscriptionId++ : null,
+    purpose,
+    startDate: date,
+    term,
+    annualRate,
+    cashFreq,
+    cashDays,
+    compoundFreq,
+    compoundDays,
+    interestFirst,
+    stopAtPayoff,
+
+    initial: principal,
+    cashAmount: amount,
+
+    direction,
+    cancelout,            // <-- now defined
+    overrides: {}
+  };
+
+  entries.push(entry);
+  updateSummary();
+  renderLedger();
+}
+
+
+function safeEval(expr) {
+  try {
+    // Keep your inline math UX; consider a safer parser long-term
+    // Reject letters to avoid code injection
+    if (/[a-zA-Z]/.test(expr)) return NaN;
+    const val = eval(expr);
+    return typeof val === 'number' ? val : NaN;
+  } catch {
+    return NaN;
+  }
+}
+
+
+
+
+
+
+
+
+
+function resetEditForm() {
+  updateSummary();
+  renderLedger();
+}
+
+
+// Force the edit bar into subscription mode for testing
+
+
+
+
+function removeEntry(id) {
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  if (entry.type === "income") totalIncome -= entry.amount;
+  else totalExpenses -= entry.amount;
+  entries = entries.filter(e => e.id !== id);
+  renderLedger();
+  updateSummary();
+}
+
+// Initial render with placeholders
+renderLedger();
+window.addEventListener("DOMContentLoaded", () => {
+  const idBox = document.getElementById("modifyId");
+if (idBox) {
+  idBox.addEventListener("input", checkEditContext); // fires on every keystroke
+  idBox.addEventListener("keydown", e => {
+  if (e.key === "Backspace") {
+    checkEditContext(); // force clear
+  }
+});
+
+}
+
+});
+
+document.getElementById('exportLMLBtn').addEventListener('click', function() {
+  // Build manifest
+  const lmlData = {
+    manifest: {
+      version: "1.0",
+      currency: "AUD",
+      cutoffDate: document.getElementById("futureCutoff").value || new Date().toISOString().split("T")[0],
+      author: "hamburger"
+    },
+    entries: entries // your global ledger array
+  };
+
+  // Stringify with indentation
+  const jsonStr = JSON.stringify(lmlData, null, 2);
+
+  // Create blob
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  // Trigger download
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ledger.lml"; // extension signals your custom format
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+
+function importEntries(fileEntries) {
+  if (!Array.isArray(fileEntries)) return;
+
+  fileEntries.forEach(entry => {
+    // Ensure unique IDs
+    entry.entryId = nextEntryId++;
+    if (entry.subscriptionId) {
+      entry.subscriptionId = nextSubscriptionId++;
+    }
+
+    // Push into your global entries array
+    entries.push(entry);
+  });
+
+  // Refresh summary + ledger
+  updateSummary();
+  renderLedger();
+}
+
+
+function validateEntry(entry) {
+  return entry && typeof entry.purpose === "string" && typeof entry.cashAmount === "number";
+}
+
+
+document.getElementById('lmlFile').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      importEntries(data.entries);
+    } catch (err) {
+      alert("Error parsing LML file");
+    }
+  };
+  reader.readAsText(file);
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Wire cutoff controls
+  const cutoffEl = document.getElementById("futureCutoff");
+  const cutoffTodayBtn = document.getElementById("cutoffTodayBtn");
+
+  if (cutoffEl && cutoffTodayBtn) {
+    cutoffEl.addEventListener("change", () => {
+      updateSummary();
+      renderLedger();
+    });
+
+    cutoffTodayBtn.addEventListener("click", setCutoffToToday);
+  }
+
+  // Initial render
+  updateSummary();
+  renderLedger();
+});
+
+
+
+
+</script>
 </body>
 </html>
